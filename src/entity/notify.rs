@@ -1,0 +1,48 @@
+use super::*;
+
+cmd_object! {
+    NotifyServerClose {
+        Server {}
+    }
+    NotifyBuddyAdd {
+        Server {
+            uid:i32,
+            nick:[u8;16],
+        }
+    }
+    NotifyBuddyReply {
+       Server {
+            uid:i32,
+            nick:[u8;16],
+            black:i8,
+        }
+    }
+    NotifyItemGive {
+        Server {
+            cmd: u32,
+            item_add: Vec<ItemInfo>,
+            pet_add: Vec<ItemPetInfo>,
+            item_sub: Vec<ItemInfo>,
+        }
+    }
+    NotifyPetSpawnLobby {
+        Server {
+            pets: Vec<PetSpawnLobbyInfo>,
+        }
+    }
+    NotifyPetItemUpdate {
+        Server {
+            data: Vec<PetItemUpdateInfo>,
+        }
+    }
+    NotifySyncServerTime {
+        Server {
+            time: u32,
+        }
+    }
+    NotifyMapRarePet {
+        Server {
+            pets: Vec<PetMapRareInfo>,
+        }
+    }
+}
