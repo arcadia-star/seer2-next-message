@@ -59,8 +59,8 @@ impl LoginUser {
             Ok(false)
         } else {
             let m = Message::new(r.unwrap());
-            let d = parse_data(MessageSource::Client, m.cid, &m.data).unwrap().unwrap_or_default();
-            println!("rsp: {:?} {}", m, d);
+            let d = parse_data(MessageSource::Client, m.cid, &m.data);
+            println!("rsp: {:?} {:?}", m, d);
             Ok(true)
         }
     }

@@ -78,9 +78,15 @@ impl Message {
         cid % 13 + len % 21 + last_seq + 147 - last_seq / 7
     }
     fn sign_code(&mut self) {
-        self.code = 0;
         let adder = |a: i32, b| a.overflowing_add(b).0;
-        let a = self.bytes().iter().map(|e| *e as i32).reduce(adder).unwrap_or(0);
+        let mut bytes = BytesMut::with_capacity(self.len as usize);
+        bytes.put_i32_le(self.len);
+        bytes.put_i16_le(self.cid);
+        bytes.put_i32_le(self.uid);
+        bytes.put_i32_le(self.seq);
+        bytes.put_i32_le(self.code);
+        bytes.put(&mut self.data.clone());
+        let a = bytes.iter().map(|e| *e as i32).reduce(adder).unwrap_or(0);
         self.code = a % 100000;
     }
     fn need_encrypt(cid: i16) -> bool {
