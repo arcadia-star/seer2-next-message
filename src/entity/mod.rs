@@ -81,9 +81,9 @@ macro_rules! cmd_object {
             fn source(&self) -> crate::message::MessageSource {
                 crate::message::MessageSource::$src
             }
-            fn parse(&self, msg: &crate::message::Message) -> Result<Box<dyn crate::message::MessageTrait>, crate::message::SerdeError> {
-                let d: $name = crate::message::Message::deserialize(&mut msg.data.clone())?;
-                Ok(Box::new(d))
+            fn parse(&self, data: &bytes::Bytes) -> Result<String, crate::message::SerdeError> {
+                let d: $name = crate::message::Message::deserialize(&mut data.clone())?;
+                Ok(format!("{:?}",d))
             }
         }
     })*};

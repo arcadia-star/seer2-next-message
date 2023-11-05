@@ -5,13 +5,12 @@ use std::sync::Arc;
 
 use bytes::{Buf, BufMut, Bytes};
 use log::{error, info};
-use once_cell::unsync::Lazy;
 use tokio::net::{TcpListener, TcpSocket};
 use tokio::select;
 use tokio::sync::Mutex;
 
 use crate::entity::LoginGetServerListRsp;
-use crate::message::{Message, MessageParserTrait, MessageSource};
+use crate::message::{Message, MessageSource, parse_data};
 use crate::net::Connection;
 
 #[allow(unused)]
@@ -24,16 +23,9 @@ mod net;
 const PROXY_ADDR: (&str, u16) = ("127.0.0.1", 5001);
 const LOGIN_ADDR: &str = "118.89.150.23:1863";
 
-const PARSERS: Lazy<HashMap<(MessageSource, i16), Box<dyn MessageParserTrait>>> = Lazy::new(|| {
-    let all = entity::get_all_parsers();
-    let map: HashMap<_, _> = all.into_iter().map(|e| ((e.source(), e.command().cid()), e)).collect();
-    map
-});
-
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     setup_logger().expect("init log error");
-    info!("parser count: {}", PARSERS.len());
 
     let listener = TcpListener::bind(PROXY_ADDR).await?;
     info!("listening:{:?}", PROXY_ADDR);
@@ -65,6 +57,7 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8
             return Ok(());
         }
         let msg = Message::new(b.unwrap());
+        parse_msg(MessageSource::Client, msg.bytes());
         let mut lock = map.lock().await;
         let addr = lock.remove(&msg.uid);
         (
@@ -146,9 +139,7 @@ fn parse_msg(src: MessageSource, bytes: Bytes) {
         MessageSource::Client => "C:",
         MessageSource::Server => "S:",
     };
-    let mut m = Message::new(bytes);
-    let p = PARSERS;
-    let parser = p.get(&(src, m.cid));
+    let m = Message::new(bytes);
     let len = m.len;
     let cid = m.cid;
     let uid = m.uid;
@@ -158,20 +149,21 @@ fn parse_msg(src: MessageSource, bytes: Bytes) {
         info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
         return;
     }
-
-    match parser {
-        None => {
-            error!(target: RAW,"{prefix} unknown [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
+    match parse_data(src, cid, &m.data) {
+        Ok(s) => {
+            match s {
+                None => {
+                    error!(target: RAW,"{prefix} unknown [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
+                }
+                Some(s) => {
+                    info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {} {:?}",hex::encode(m.data.chunk()),s);
+                }
+            }
         }
-        Some(p) => match p.parse(&mut m) {
-            Ok(r) => {
-                info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {} {:?}",hex::encode(m.data.chunk()),r);
-            }
-            Err(e) => {
-                error!("parse error {:?}",e);
-                error!(target: RAW,"{prefix} error [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
-            }
-        },
+        Err(e) => {
+            error!("parse error {:?}",e);
+            error!(target: RAW,"{prefix} error [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
+        }
     }
 }
 

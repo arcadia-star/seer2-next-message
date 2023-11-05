@@ -147,6 +147,17 @@ cmd_object! {
         sender_name: Vec<u32>,
         mail_title: Vec<u32>,
     }
+    struct UserHomeHonorSptInfo {
+        id: u32,
+        status: u8,
+    }
+    struct UserHomeHonorGateInfo {
+        id: u8,
+        pve_normal: u8,
+        pve_fifty: u8,
+        pve_last_normal: u8,
+        pve_last_fifty: u8,
+    }
 }
 
 cmd_object! {
@@ -379,6 +390,29 @@ cmd_object! {
         }
         Server {
             mails: Vec<UserMailInfo>,
+        }
+    }
+    UserChat {
+        Client {
+            uid: u32,
+            msg: String,
+        }
+        Server {
+            uid: u32,
+            nick: [u8;16],
+            receiver: u32,
+            pipe: u8,
+            msg: String,
+        }
+    }
+    UserHomeHonor {
+        Client {
+            uid: u32,
+        }
+        Server {
+            _a: Vec<u32>,
+            spt: Vec<UserHomeHonorSptInfo>,
+            gate: Vec<UserHomeHonorGateInfo>,
         }
     }
 }

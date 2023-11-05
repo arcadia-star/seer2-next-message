@@ -45,4 +45,13 @@ cmd_object! {
             pets: Vec<PetMapRareInfo>,
         }
     }
+    NotifyBeatCaptain {
+        Server {
+            typ: u32,
+            uid: u32,
+            name: [u8; 16],
+            _a: Vec<u32>,
+            _b: [u32;4],
+        }
+    }
 }

@@ -133,6 +133,23 @@ cmd_object! {
         free_time: u32,
         evolve_level: u32,
     }
+    struct PetItemUseInfo {
+        item_id: i32,
+        item_cnt: i32,
+    }
+    struct PetUseItemInfo {
+        pid: u32,
+        items: Vec<PetItemUseInfo>,
+    }
+    struct PetAddLearningPointInfo {
+        index: u8,
+        changed: i16,
+    }
+    struct PetLearningPointInfo {
+        index: u8,
+        ability_value: u16,
+        learning_point: u16,
+    }
 }
 
 cmd_object! {
@@ -236,6 +253,44 @@ cmd_object! {
         }
         Server {
             data: Vec<u32>,
+        }
+    }
+    PetGetItemList {
+        Client {}
+        Server {
+            items: Vec<PetUseItemInfo>,
+        }
+    }
+    PetReplaceSkill {
+        Client {
+            pid: u32,
+            skill_ids: Vec<u32>,
+        }
+        Server {
+            pid: u32,
+            skill_ids: Vec<u32>,
+            candidate_skill_ids: Vec<u32>,
+        }
+    }
+    PetAddLearningPoint {
+        Client {
+            pid: u32,
+            add: Vec<PetAddLearningPointInfo>
+        }
+        Server {
+            pid: u32,
+            points: Vec<PetLearningPointInfo>,
+            unused_point: u16,
+        }
+    }
+    PetCleanPotential {
+        Client {
+            pid: u32,
+            _a: u32,
+        }
+        Server {
+            change: [u32; 6],
+            base: [u32; 6],
         }
     }
 }

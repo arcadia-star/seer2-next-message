@@ -605,8 +605,6 @@ mod tests {
     use bytes::{Buf, Bytes};
     use serde::{Deserialize, Serialize};
 
-    use LoginGetSessionReq;
-
     use crate::entity::LoginGetSessionReq;
 
     use super::{from_bytes, to_bytes};
