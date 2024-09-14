@@ -9,12 +9,17 @@ cmd_object! {
     struct ItemEuqipInfo {
         id: i32,
         used: i8,
-        time: u32,
+        time: i32,
         lv: i32,
     }
     struct ItemPetInfo {
-        monster: u32,
-        pid: u32,
+        monster: i32,
+        pid: i32,
+    }
+    struct ItemReward {
+        item_add: Vec<ItemInfo>,
+        item_sub: Vec<ItemInfo>,
+        pet_add: ItemPetInfo,
     }
 }
 
@@ -28,39 +33,39 @@ cmd_object! {
             items: Vec<ItemInfo>,
         }
     }
-    ItemBuyViaCoin {
+    ItemCoinBuy {
         Client {
             buy_id: i32,
-            count: u16,
+            count: i16,
         }
         Server {
             item: ItemInfo,
             coins: i32,
         }
     }
-    ItemBuyViaMiCoin {
+    ItemMoneyBuy {
         Client {
             buy_id: i32,
-            count: u32,
+            count: i32,
             pass: [u8;16],
         }
         Server {
-            item_id: u32,
-            item_count: u32,
+            buy_id: i32,
+            count: i32,
             out_mi: u32,
             current_mi: u32,
             two_out_mi: u32,
             two_current_mi: u32,
-            buy_score: u32,
+            points: i32,
         }
     }
     ItemBuyMoney {
         Client {
-            current_count: u32,
+            count: i32,
             pass: [u8;16],
         }
         Server {
-            money_count: u32,
+            money: i32,
         }
     }
     ItemEquipList {
@@ -96,6 +101,55 @@ cmd_object! {
             ride_chip_id: u32,
             pid: u32,
             ride_chip_time: u32,
+        }
+    }
+    ItemMeeMoneyCount {
+        Client {}
+        Server {
+            count:i32,
+        }
+    }
+    ItemMoneyCount {
+        Client {
+            data: [u8;16]
+        }
+        Server {
+            count: i32,
+        }
+    }
+    ItemShopDetails {
+        Client {
+            id: i32,
+        }
+        Server {
+            item_id: i32,
+            price: i32,
+            vip_price: i32,
+            non_vip_price: i32,
+            item_type: u8,
+            category: u8,
+            gift_money: i32,
+            must_vip: u8,
+            max_limit: i32,
+            total_count: i32,
+            current_count: i32,
+            is_valid: u8,
+            flag: u8,
+        }
+    }
+    ItemMiCipherCheck {
+        Client {}
+        Server {
+            has_cipher: i32,
+        }
+    }
+    ItemEquipEnhance {
+        Client {
+            equip: Vec<ItemEuqipInfo>,
+        }
+        Server {
+            item: i32,
+            equip: i32,
         }
     }
 }

@@ -1,95 +1,137 @@
-use std::io::Cursor;
-
+use crate::error::Error;
+use crate::message::MessageCommand;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-use serde::{Deserialize, Serialize};
+use once_cell::sync::Lazy;
+use std::any::Any;
+use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 
-use super::{encrypt, MessageTrait, serde_bytes, SerdeError};
-use super::command::MessageCommand;
-
+pub trait MessageData: Debug + Send + Sync + Any {
+    fn command() -> u16
+    where
+        Self: Sized;
+    fn from_bytes(bytes: &mut Bytes) -> Result<Self, Error>
+    where
+        Self: Sized;
+    fn to_bytes(&self) -> Result<Bytes, Error>;
+    fn to_json(&self) -> Result<String, Error>;
+    fn clone_box(&self) -> Box<dyn MessageData>;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+pub struct MessageBody(pub Result<Box<dyn MessageData>, Error>);
 #[derive(Debug)]
 pub struct Message {
-    pub len: i32,
-    pub cid: i16,
-    pub uid: i32,
-    pub seq: i32,
-    pub code: i32,
-    pub data: Bytes,
+    pub len: u32,
+    pub cid: u16,
+    pub uid: u32,
+    pub seq: u32,
+    pub code: u32,
+    pub body: MessageBody,
 }
-
+pub type MessageParser = fn(&mut Bytes) -> Result<Box<dyn MessageData>, Error>;
+static PARSERS: Lazy<(HashMap<u16, MessageParser>, HashMap<u16, MessageParser>)> = Lazy::new(|| {
+    (
+        crate::entity::client_parser().into_iter().collect(),
+        crate::entity::server_parser().into_iter().collect(),
+    )
+});
+impl MessageBody {
+    pub fn to_bytes(&self) -> Bytes {
+        match &self.0 {
+            Ok(data) => { data.to_bytes().unwrap() }
+            Err(err) => { err.to_bytes() }
+        }
+    }
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.to_bytes())
+    }
+    pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
+        match &mut self.0 {
+            Ok(data) => { data.as_any_mut().downcast_mut() }
+            Err(_) => { None }
+        }
+    }
+    pub fn deref(&self) -> &Result<Box<dyn MessageData>, Error> {
+        &self.0
+    }
+}
+impl Debug for MessageBody {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> std::fmt::Result {
+        fmt.write_fmt(format_args!("{:?}", &self.0))
+    }
+}
 impl Message {
-    pub const SUCCESS: i32 = 0;
     const HEAD_LEN: usize = 18;
-    pub fn new(mut bytes: Bytes) -> Self {
-        let mut cursor = Cursor::new(&bytes);
-        cursor.get_i32_le();
-        let cid = cursor.get_i16_le();
-        if Self::need_encrypt(cid) {
-            bytes = Bytes::from(encrypt::decrypt(bytes.chunk()));
+    fn parse(parser: &HashMap<u16, MessageParser>, bytes: &mut Bytes) -> Message {
+        let cid = Bytes::copy_from_slice(&bytes[4..6]).get_u16_le();
+        println!("cid: {}", cid);
+        let mut bytes = bytes;
+        let mut bytes0;
+        if MessageCommand::need_encrypt(cid) {
+            bytes0 = Bytes::from(crate::message::encrypt::decrypt(&bytes));
+            bytes = &mut bytes0;
         }
-        let len = bytes.get_i32_le();
-        let cid = bytes.get_i16_le();
-        let uid = bytes.get_i32_le();
-        let seq = bytes.get_i32_le();
-        let code = bytes.get_i32_le();
-        let data = bytes;
-        Self { len, cid, uid, seq, code, data }
+        let len = bytes.get_u32_le();
+        let cid = bytes.get_u16_le();
+        let uid = bytes.get_u32_le();
+        let seq = bytes.get_u32_le();
+        let code = bytes.get_u32_le();
+        let body = MessageBody(match parser.get(&cid) {
+            Some(parser) => parser(bytes),
+            None => Err(Error::ParserNotExist(cid, bytes.clone())),
+        });
+        Message { len, cid, uid, seq, code, body }
     }
-    pub fn bytes(&self) -> Bytes {
-        let len = Self::HEAD_LEN + self.data.len();
+    pub fn parse_client(bytes: &mut Bytes) -> Message {
+        Self::parse(&PARSERS.0, bytes)
+    }
+    pub fn parse_server(bytes: &mut Bytes) -> Message {
+        Self::parse(&PARSERS.1, bytes)
+    }
+    pub fn to_bytes(&self, code: u32) -> Bytes {
+        let mut data = self.body.to_bytes();
+        let len = Self::HEAD_LEN + data.len();
         let mut bytes = BytesMut::with_capacity(len);
-        bytes.put_i32_le(len as i32);
-        bytes.put_i16_le(self.cid);
-        bytes.put_i32_le(self.uid);
-        bytes.put_i32_le(self.seq);
-        bytes.put_i32_le(self.code);
-        bytes.put(&mut self.data.clone());
-        if Self::need_encrypt(self.cid) {
-            Bytes::from(encrypt::encrypt(bytes.chunk()))
-        } else {
-            bytes.freeze()
+        bytes.put_u32_le(len as u32);
+        bytes.put_u16_le(self.cid);
+        bytes.put_u32_le(self.uid);
+        bytes.put_u32_le(self.seq);
+        bytes.put_u32_le(code);
+        bytes.put(&mut data);
+        bytes.freeze()
+    }
+    pub fn to_server_bytes(&self) -> Bytes {
+        let mut bytes = self.to_bytes(self.code);
+        if MessageCommand::need_encrypt(self.cid) {
+            bytes = Bytes::from(crate::message::encrypt::encrypt(&bytes));
+        }
+        bytes
+    }
+    pub fn to_client_bytes(&self) -> Bytes {
+        let bytes = self.to_bytes(0);
+        let code = bytes.iter().map(|e| *e as u32)
+            .reduce(|a, b| a.overflowing_add(b).0)
+            .unwrap() % 100000;
+        let mut bytes = self.to_bytes(code);
+        if MessageCommand::need_encrypt(self.cid) {
+            bytes = Bytes::from(crate::message::encrypt::encrypt(&bytes));
+        }
+        bytes
+    }
+    pub fn new<T: MessageData>(uid: u32, data: T) -> Self {
+        Message {
+            len: 0,
+            cid: T::command(),
+            uid,
+            seq: 0,
+            code: 0,
+            body: MessageBody(Ok(Box::new(data))),
         }
     }
-
-    pub fn deserialize<'a, T: Deserialize<'a>>(bytes: &'a mut Bytes) -> Result<T, SerdeError> {
-        serde_bytes::from_bytes(bytes)
-    }
-    pub fn serialize<T: Serialize>(data: &T) -> Result<Bytes, SerdeError> {
-        serde_bytes::to_bytes(data)
-    }
-
-    pub fn new4client<T: MessageTrait + Serialize>(uid: i32, last_seq: i32, data: &T) -> Result<Message, SerdeError> {
-        let data_bytes = Self::serialize(data)?;
-        let cid = data.command().cid();
-        let len = (Self::HEAD_LEN + data_bytes.len()) as i32;
-        let seq = Self::next_seq(last_seq, cid as i32, len);
-        let mut m = Message {
-            len,
-            cid,
-            uid,
-            seq,
-            code: 0,
-            data: data_bytes,
-        };
-        m.sign_code();
-        Ok(m)
-    }
-
-    fn next_seq(last_seq: i32, cid: i32, len: i32) -> i32 {
-        cid % 13 + len % 21 + last_seq + 147 - last_seq / 7
-    }
-    fn sign_code(&mut self) {
-        let adder = |a: i32, b| a.overflowing_add(b).0;
-        let mut bytes = BytesMut::with_capacity(self.len as usize);
-        bytes.put_i32_le(self.len);
-        bytes.put_i16_le(self.cid);
-        bytes.put_i32_le(self.uid);
-        bytes.put_i32_le(self.seq);
-        bytes.put_i32_le(self.code);
-        bytes.put(&mut self.data.clone());
-        let a = bytes.iter().map(|e| *e as i32).reduce(adder).unwrap_or(0);
-        self.code = a % 100000;
-    }
-    fn need_encrypt(cid: i16) -> bool {
-        cid < MessageCommand::LoginGetVerifyCode.cid() || cid > MessageCommand::UserLoginDeputize.cid()
+    pub fn next_seq(&self, seq: u32) -> u32 {
+        let data = self.body.to_bytes();
+        let len = (Self::HEAD_LEN + data.len()) as u32;
+        let cid = self.cid as u32;
+        cid % 13 + len % 21 + seq + 147 - seq / 7
     }
 }

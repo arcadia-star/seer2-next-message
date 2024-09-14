@@ -1,9 +1,18 @@
 use super::*;
 
 cmd_object! {
+    struct QuestServerBuffer {
+        status: u8,
+        extra_data: u8,
+    }
+    struct QuestClientBuffer {
+        status: u8,
+        extra_data: [u8;3],
+    }
     struct QuestBuffer {
         quest_id: i32,
-        buffer: [i64; 8],
+        server_buffer: [QuestServerBuffer;10],
+        client_buffer: [QuestClientBuffer;11],
     }
 }
 
@@ -35,18 +44,14 @@ cmd_object! {
     QuestSubmit {
         Client {
             quest_id: i32,
-            step: u8,
-            flag: u8,
-            data0: [u8; 11],
-            data1: [u8; 11],
-            data2: [u8; 11],
+            step_id: u8,
+            reward: u8,
+            data: [QuestClientBuffer;11],
         }
         Server {
             quest_id: i32,
-            step: u8,
-            item_add: Vec<ItemInfo>,
-            item_sub: Vec<ItemInfo>,
-            pet_add: ItemPetInfo,
+            step_id: u8,
+            reward: ItemReward,
         }
     }
 }

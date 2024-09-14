@@ -233,11 +233,15 @@ cmd_object! {
     }
     FightCmdMedicine {
         Client {
-            item: u32,
-            pid: u32,
-            count: u32,
+            pid: i32,
+            item: i32,
+            count: i32,
         }
-        Server {}
+        Server {
+            item: i32,
+            pid: i32,
+            hp: i32,
+        }
     }
     FightCmdSkill {
         Client {

@@ -3,32 +3,40 @@ use std::fs;
 use std::io::{Error, Write};
 use std::sync::Arc;
 
-use bytes::{Buf, BufMut, Bytes};
+use bytes::{Buf, BufMut};
 use log::{error, info};
+use message::entity::LoginGetServerListRsp;
+use message::message::{Message, MessageCommand};
+use message::net::Connection;
+use once_cell::sync::Lazy;
 use tokio::net::{TcpListener, TcpSocket};
 use tokio::select;
 use tokio::sync::Mutex;
 
-use crate::entity::LoginGetServerListRsp;
-use crate::message::{Message, MessageSource, parse_data};
-use crate::net::Connection;
+struct Config {
+    port: u16,
+    login: String,
+}
+static CONFIG: Lazy<Config> = Lazy::new(|| {
+    let map: HashMap<String, String> = dotenv::vars().collect();
+    Config {
+        port: map.get("LOCAL_PORT").unwrap().parse().unwrap(),
+        login: map.get("LOGIN_SERVER").unwrap().clone(),
+    }
+});
 
-#[allow(unused)]
-mod entity;
-#[allow(unused)]
-mod message;
-#[allow(unused)]
-mod net;
-
-const PROXY_ADDR: (&str, u16) = ("127.0.0.1", 5001);
-const LOGIN_ADDR: &str = "118.89.150.23:1863";
+#[derive(PartialEq)]
+enum MessageSource {
+    Client,
+    Server,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     setup_logger().expect("init log error");
 
-    let listener = TcpListener::bind(PROXY_ADDR).await?;
-    info!("listening:{:?}", PROXY_ADDR);
+    let listener = TcpListener::bind(format!("127.0.0.1:{}", CONFIG.port)).await?;
+    info!("listening:{:?}", CONFIG.port);
     let map = Arc::new(Mutex::new(HashMap::new()));
     loop {
         let map = map.clone();
@@ -40,7 +48,7 @@ async fn main() -> Result<(), Error> {
     }
 }
 
-async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8>, u16)>>>) -> Result<(), Error> {
+async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<u32, (Vec<u8>, u16)>>>) -> Result<(), Error> {
     let mut client = {
         //flash policy
         if client.discard_flash_policy().await? {
@@ -50,41 +58,43 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8
         }
         client
     };
-    let (server_addr, b) = {
-        let b = client.read_frame().await?;
-        if b.is_none() {
-            error!("none after flash policy");
-            return Ok(());
-        }
-        let msg = Message::new(b.unwrap());
-        parse_msg(MessageSource::Client, msg.bytes());
+    let bytes = client.read_frame().await?;
+    if bytes.is_none() {
+        error!("none after flash policy");
+        return Ok(());
+    }
+    let bytes = bytes.unwrap();
+
+    let msg = Message::parse_client(&mut bytes.clone());
+    parse_msg(MessageSource::Client, &msg);
+
+    let server_addr = if msg.cid == MessageCommand::UserLoginOnline {
         let mut lock = map.lock().await;
         let addr = lock.remove(&msg.uid);
-        (
-            match addr {
-                None => LOGIN_ADDR.to_string(),
-                Some((a, p)) => {
-                    let mut v = vec![];
-                    for x in a {
-                        if x == 0 {
-                            break;
-                        }
-                        v.push(x);
+        match addr {
+            None => unreachable!(),
+            Some((ip, port)) => {
+                let mut v = vec![];
+                for x in ip {
+                    if x == 0 {
+                        break;
                     }
-                    let r = format!("{}:{}", String::from_utf8(v).unwrap(), p);
-                    r
+                    v.push(x);
                 }
-            },
-            msg.bytes(),
-        )
+                format!("{}:{}", String::from_utf8(v).unwrap(), port)
+            }
+        }
+    } else {
+        CONFIG.login.to_string()
     };
+
     let mut server = {
         let server_socket = TcpSocket::new_v4()?;
         let server_stream = server_socket.connect(server_addr.parse().unwrap()).await?;
         info!("connected:{}", server_addr);
-        let t = server_stream.local_addr()?;
-        let mut server = Connection::new(server_stream, t);
-        server.write(b.chunk()).await?;
+        let addr = server_stream.local_addr()?;
+        let mut server = Connection::new(server_stream, addr);
+        server.write(bytes.chunk()).await?;
         server
     };
     loop {
@@ -96,7 +106,7 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8
                     break;
                 }
                 let b = b.unwrap();
-                parse_msg(MessageSource::Client, b.clone());
+                parse_msg(MessageSource::Client, &Message::parse_client(&mut b.clone()));
                 server.write(b.chunk()).await?;
             }
             b = server.read_frame() =>{
@@ -106,23 +116,22 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8
                     break;
                 }
                 let mut b = b.unwrap();
-                parse_msg(MessageSource::Server, b.clone());
+                parse_msg(MessageSource::Server, &Message::parse_server(&mut b.clone()));
                 let t = b.get(4..=5);
                 if let Some(cmd) = t {
                     if cmd == [105, 0] {
-                        let mut m = Message::new(b);
-                        let mut d: LoginGetServerListRsp = Message::deserialize(&mut m.data).unwrap();
+                        let mut m = Message::parse_server(&mut b);
+                        let d: &mut LoginGetServerListRsp = m.body.downcast_mut().unwrap();
                         {
                             let mut lock = map.lock().await;
                             lock.insert(m.uid, (d.servers[1].ip.to_vec(), d.servers[1].port));
                         }
                         d.servers[1].id = 1i16;
                         let mut ip = [0u8; 16];
-                        ip.writer().write(PROXY_ADDR.0.as_bytes()).unwrap();
+                        ip.writer().write(b"127.0.0.1").unwrap();
                         d.servers[1].ip = ip;
-                        d.servers[1].port = PROXY_ADDR.1;
-                        m.data = Message::serialize(&d).unwrap();
-                        b = m.bytes();
+                        d.servers[1].port = CONFIG.port;
+                        b = m.to_server_bytes();
                     }
                 }
                 client.write(b.chunk()).await?;
@@ -134,35 +143,22 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<i32, (Vec<u8
 
 const RAW: &str = "RAW";
 
-fn parse_msg(src: MessageSource, bytes: Bytes) {
+fn parse_msg(src: MessageSource, m: &Message) {
     let prefix = match src {
         MessageSource::Client => "C:",
         MessageSource::Server => "S:",
     };
-    let m = Message::new(bytes);
     let len = m.len;
     let cid = m.cid;
     let uid = m.uid;
     let seq = m.seq;
     let code = m.code;
-    if MessageSource::Server == src && code > 0 {
-        info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
-        return;
-    }
-    match parse_data(src, cid, &m.data) {
-        Ok(s) => {
-            match s {
-                None => {
-                    error!(target: RAW,"{prefix} unknown [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
-                }
-                Some(s) => {
-                    info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {} {:?}",hex::encode(m.data.chunk()),s);
-                }
-            }
+    match m.body.deref() {
+        Ok(data) => {
+            info!(target: RAW,"{prefix} success [{len},{cid},{uid},{seq},{code}] {} {:?}", m.body.to_hex() ,data);
         }
-        Err(e) => {
-            error!("parse error {:?}",e);
-            error!(target: RAW,"{prefix} error [{len},{cid},{uid},{seq},{code}] {}",hex::encode(m.data.chunk()));
+        Err(_) => {
+            error!(target: RAW,"{prefix} unknown [{len},{cid},{uid},{seq},{code}] {}", m.body.to_hex());
         }
     }
 }

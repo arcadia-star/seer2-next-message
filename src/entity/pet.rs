@@ -2,16 +2,16 @@ use super::*;
 
 cmd_object! {
     struct PetUserInfo {
-        pid: u32,
-        monster: u32,
-        sex: u8,
+        pid: i32,
+        monster: i32,
+        sex: i8,
         level: u8,
-        character: u32,
-        potential: u32,
-        flag: u32,
-        rider_chip: u32,
-        rider_chip_time: u32,
-        evolve_level: u32,
+        character: i32,
+        potential: i32,
+        flag: i32,
+        rider_chip: i32,
+        rider_chip_time:i32,
+        evolve_level: i32,
     }
     struct PetSimpleInfo {
         pid: u32,
@@ -20,19 +20,19 @@ cmd_object! {
         state: u32,
     }
     struct PetBaseInfo {
-        pid: u32,
-        sex: u8,
-        level: u16,
-        hp: u32,
-        max_hp: u32,
+        pid: i32,
+        sex: i8,
+        level: i16,
+        hp: i32,
+        mhp: u32,
         atk: u16,
-        sp_atk: u16,
+        spk: u16,
         def: u16,
-        sp_def: u16,
+        spf: u16,
         spd: u16,
-        exp_to_level_up: u32,
-        character: u16,
-        monster: u32,
+        exp_to_level_up: i32,
+        character: i16,
+        monster: i32,
     }
     struct PetStarSoulInfo {
         r#type: u32,
@@ -40,49 +40,49 @@ cmd_object! {
     }
     struct PetInfo {
         base_info: PetBaseInfo,
-        flag: u32,
-        point_unused: u16,
-        point_hp: u16,
-        point_atk: u16,
-        point_sp_atk: u16,
+        flag: i32,
+        points_unused: u16,
+        points_mhp: u16,
+        points_atk: u16,
+        points_spk: u16,
         points_def: u16,
-        point_sp_def: u16,
-        point_spd: u16,
-        skill_ids: Vec<u32>,
-        candidate_skill_ids: Vec<u32>,
-        potential: u32,
+        points_spf: u16,
+        points_spd: u16,
+        skill_ids: Vec<i32>,
+        candidate_skill_ids: Vec<i32>,
+        potential_origin: i32,
         battle_level: u32,
-        potential_atk: u32,
-        potential_def: u32,
-        potential_sp_atk: u32,
-        potential_sp_def: u32,
-        potential_spd: u32,
-        potential_hp: u32,
+        potential_atk: i32,
+        potential_def: i32,
+        potential_spk: i32,
+        potential_spf: i32,
+        potential_spd: i32,
+        potential_mhp: i32,
         star_souls: Vec<PetStarSoulInfo>,
-        height: u16,
-        weight: u16,
-        emblem_id: u32,
+        height: i16,
+        weight: i16,
+        emblem_id: i32,
         training_count: u16,
-        decoration_id: u32,
-        ride_chip: u32,
-        ride_chip_time: u32,
-        evolve_level: u32,
+        decoration_id: i32,
+        rider_chip: i32,
+        rider_chip_time: u32,
+        evolve_level: i32,
     }
     struct PetStorageInfo {
-        pid: u32,
-        monster: u32,
-        level: u16,
-        treasure_time: u32,
-        evolve_level: u32,
+        pid: i32,
+        monster: i32,
+        level: i16,
+        treasure_time: i32,
+        evolve_level: i32,
     }
     struct PetDetailInfo {
-        flag: u32,
-        height: u16,
-        weight: u16,
-        potential: u32,
-        emblem: u32,
-        decoration: u32,
-        evolve_level: u32,
+        flag: i32,
+        height: i16,
+        weight: i16,
+        potential: i32,
+        emblem: i32,
+        decoration: i32,
+        evolve_level: i32,
     }
     struct PetSpawnLobbyInfo {
         index: u32,
@@ -127,11 +127,11 @@ cmd_object! {
         r#type: u8,
     }
     struct PetFreeInfo {
-        pid: u32,
-        monster: u32,
-        level: u16,
-        free_time: u32,
-        evolve_level: u32,
+        pid: i32,
+        monster: i32,
+        level: i16,
+        free_time: i32,
+        evolve_level: i32,
     }
     struct PetItemUseInfo {
         item_id: i32,
@@ -150,6 +150,23 @@ cmd_object! {
         ability_value: u16,
         learning_point: u16,
     }
+    struct PetTrainingInfo {
+        monster: i32,
+        pid: i32,
+        level: i32,
+        character: i32,
+        battle_potential: i32,
+        start_training_time:i32,
+        fight_exp: i32,
+        mhp: i32,
+        atk: u16,
+        spk: u16,
+        def: u16,
+        spf: u16,
+        spd: u16,
+        skills: Vec<i32>,
+        flag: i32,
+    }
 }
 
 cmd_object! {
@@ -164,7 +181,7 @@ cmd_object! {
     }
     PetGetSimple {
         Client {
-            pid: u32,
+            pid: i32,
         }
         Server {
             base_info: PetBaseInfo,
@@ -174,7 +191,7 @@ cmd_object! {
     }
     PetSetFighting {
         Client {
-            pid: u32,
+            pid: i32,
         }
         Server {
             second_pet: i32,
@@ -183,24 +200,26 @@ cmd_object! {
     }
     PetSetFollowing {
         Client {
-            pid: u32,
-            r#type: i8,
+            pid: i32,
+            flag: i8,
         }
         Server {
             uid: i32,
-            pid: u32,
-            r#type: i8,
+            pid: i32,
+            flag: i8,
+            data: Vec<PetUserInfo>,
         }
     }
-    PetSetStorage {
+    PetPutStorage {
         Client {
-            pid: u32,
-            r#type: i8,
+            pid: i32,
+            put_flag: i8,
         }
         Server {
-            first_pet: i32,
-            pid: u32,
-            status: i8,
+            first_pid: i32,
+            pid: i32,
+            status: u8,
+            pets: Vec<PetInfo>,
         }
     }
     PetSetFree {
@@ -283,14 +302,33 @@ cmd_object! {
             unused_point: u16,
         }
     }
-    PetCleanPotential {
+    PetRebornPotential {
         Client {
-            pid: u32,
-            _a: u32,
+            pid: i32,
+            flag: i32,
         }
         Server {
-            change: [u32; 6],
-            base: [u32; 6],
+            change: [i32; 6],
+            base: [i32; 6],
+        }
+    }
+    PetChangeCharacter {
+        Client {
+            pid: i32,
+            item: i32,
+        }
+        Server {
+            pet: PetBaseInfo,
+            item: i32,
+        }
+    }
+    PetBuySkill {
+        Client {
+            pid: i32,
+            skills: Vec<i32>,
+        }
+        Server {
+            skills: Vec<i32>,
         }
     }
 }

@@ -40,18 +40,32 @@ impl Connection {
     }
     pub async fn read_frame(&mut self) -> Result<Option<Bytes>, Error> {
         loop {
-            if let Some(frame) = self.parse_frame().await? {
-                return Ok(Some(frame));
+            let (closed, data) = self.try_read_frame().await?;
+            if closed {
+                return Ok(None);
             }
-
-            if 0 == self.read_buffer().await? {
-                return if self.buffer.is_empty() {
-                    Ok(None)
-                } else {
-                    Err(Error::new(ErrorKind::UnexpectedEof, format!("connection reset by peer, remaining {:?}", self.buffer.remaining())))
-                };
+            match data {
+                Some(data) => {
+                    return Ok(Some(data));
+                }
+                None => {}
             }
         }
+    }
+    pub async fn try_read_frame(&mut self) -> Result<(bool, Option<Bytes>), Error> {
+        if let Some(frame) = self.parse_frame().await? {
+            return Ok((false, Some(frame)));
+        }
+
+        if 0 == self.read_buffer().await? {
+            return if self.buffer.is_empty() {
+                Ok((true, None))
+            } else {
+                Err(Error::new(ErrorKind::UnexpectedEof, format!("connection reset by peer, remaining {:?}", self.buffer.remaining())))
+            };
+        }
+
+        Ok((false, self.parse_frame().await?))
     }
     async fn parse_frame(&mut self) -> Result<Option<Bytes>, Error> {
         let mut buf = Cursor::new(&self.buffer[..]);
@@ -73,7 +87,7 @@ impl Connection {
             return Err(Error::new(ErrorKind::UnexpectedEof, format!("wrong len:{}", len)));
         }
         buf.set_position(0);
-        if len > 10240 {
+        if len > 1024 * 1024 {
             Err(Error::new(ErrorKind::UnexpectedEof, format!("wrong len:{}", len)))
         } else if len > buf.remaining() {
             Ok(false)

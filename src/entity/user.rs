@@ -22,7 +22,7 @@ cmd_object! {
         loc_x: i32,
         loc_y: i32,
         medal: i32,
-        create_time: u32,
+        create_time: i32,
         equip_ids: Vec<i32>,
         noo_equip_ids: Vec<i32>,
     }
@@ -114,8 +114,8 @@ cmd_object! {
 
 cmd_object! {
     struct UserDayLimitInfo {
-        id: u32,
-        count: u32,
+        day_limit_id: i32,
+        count: i32,
     }
     struct UserRankInfo {
         uid: u32,
@@ -138,14 +138,14 @@ cmd_object! {
         time: Vec<UserTimeRange>,
     }
     struct UserMailInfo {
-        mail_id: u32,
-        raw_send_time: u32,
-        has_read: u32,
-        r#type: u32,
-        attachment_symble: u32,
-        sender_id: u32,
-        sender_name: Vec<u32>,
-        mail_title: Vec<u32>,
+        mail_id: i32,
+        raw_send_time: i32,
+        has_read: i32,
+        r#type: i32,
+        attachment_symble: i32,
+        sender_id: i32,
+        sender_name: Vec<u8>,
+        mail_title: Vec<u8>,
     }
     struct UserHomeHonorSptInfo {
         id: u32,
@@ -265,7 +265,7 @@ cmd_object! {
     }
     UserDayLimitList {
         Client {
-            ids: Vec<u32>,
+            day_limit_ids: Vec<i32>,
         }
         Server {
             data: Vec<UserDayLimitInfo>,
@@ -314,7 +314,7 @@ cmd_object! {
     }
     UserDayLimitSingle {
         Client {
-            id: u32,
+            day_limit_id: i32,
         }
         Server {
             data: UserDayLimitInfo,
@@ -332,19 +332,19 @@ cmd_object! {
             day6: UserDayExpInfo,
         }
     }
-    UserSyncPosition {
+    UserPositionSync {
         Client {
-            loc_x: u32,
-            loc_y: u32,
+            loc_x: i32,
+            loc_y: i32,
             time: u32,
         }
         Server {
-            uid: u32,
-            loc_x: u32,
-            loc_y: u32,
+            uid: i32,
+            loc_x: i32,
+            loc_y: i32,
         }
     }
-    UserGetSession {
+    UserSession {
         Client {
             product_id: u32,
         }
@@ -352,39 +352,31 @@ cmd_object! {
             session: [u8;16],
         }
     }
-    UserMoneyCount {
-        Client {
-            data: [u8;16]
-        }
-        Server {
-            count: u32,
-        }
-    }
     UserActivityCount {
         Client {
-            r#type: Vec<u32>,
+            activity_ids: Vec<i32>,
         }
         Server {
-            data: Vec<u32>,
+            data: Vec<i32>,
         }
     }
-    UserGetClientBuffer {
+    UserBufferRead {
         Client {
-            r#type: u32,
+            buffer_id: i32,
         }
         Server {
-            r#type: u32,
-            buffer0: [u16;25],
+            buffer_id: i32,
+            buffer_data: [u16;25],
         }
     }
-    UserSetClientBuffer {
+    UserBufferWrite {
         Client {
-            r#type: u32,
-            buffer0: [u16;25],
+            buffer_id: i32,
+            buffer_data: [u16;25],
         }
         Server {}
     }
-    UserGetMailList {
+    UserMailList {
         Client {
             uid: u32,
         }
@@ -413,6 +405,51 @@ cmd_object! {
             _a: Vec<u32>,
             spt: Vec<UserHomeHonorSptInfo>,
             gate: Vec<UserHomeHonorGateInfo>,
+        }
+    }
+    UserHomeScene {
+        Client {}
+        Server {
+            left_fight_cnt: u8,
+            training_pets: Vec<PetTrainingInfo>,
+            garbage_cnt: u8,
+            birth_pets: Vec<PetInfo>,
+            sule_award_cnt: i32,
+            semiya_cnt: i32,
+        }
+    }
+    UserShoot {
+        Client {
+            event: i32,
+            shot: i32,
+            x: i32,
+            y: i32,
+        }
+        Server {
+            uid: i32,
+            event:i32,
+            shot: i32,
+            x: i32,
+            y: i32,
+        }
+    }
+    UserChangeEquip {
+        Client {
+            equips: Vec<i32>,
+            noo_equips: Vec<i32>,
+        }
+        Server {
+            uid: i32,
+            equips: Vec<i32>,
+            noo_equips: Vec<i32>,
+        }
+    }
+    UserDigMine {
+        Client {
+            mine: i32,
+        }
+        Server {
+            reward: ItemReward,
         }
     }
 }

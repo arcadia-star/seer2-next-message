@@ -54,4 +54,15 @@ cmd_object! {
             _b: [u32;4],
         }
     }
+    NotifyServerEvent {
+        Server {
+            event_type: i32,
+            event_data: Vec<i32>,
+        }
+    }
+    NotifyPetDelete {
+        Server {
+            pids: Vec<i32>,
+        }
+    }
 }
