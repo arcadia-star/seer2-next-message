@@ -3,7 +3,7 @@ use super::*;
 cmd_object! {
     struct UserNooInfo {
         noo_has: i8,
-        name: [u8; 16],
+        name: CString<16>,
         flag: i32,
         color: i32,
     }
@@ -17,7 +17,7 @@ cmd_object! {
 cmd_object! {
     struct UserBaseInfo {
         uid: i32,
-        nick: [u8; 16],
+        nick: CString<16>,
         color: i32,
         loc_x: i32,
         loc_y: i32,
@@ -66,7 +66,7 @@ cmd_object! {
         summer_registration_days: i32,
         birthday_info: i32,
 
-        ip: [u8; 20],
+        ip: CString<20>,
         year_vip: i32,
     }
     struct UserEnterDetailInfo {
@@ -87,8 +87,8 @@ cmd_object! {
     }
     struct UserSimpleInfo {
         uid: i32,
-        sex: i8,
-        nick: [u8; 16],
+        sex: u8,
+        nick: CString<16>,
         color: i32,
         score: i32,
         equip_ids: Vec<i32>,
@@ -114,7 +114,7 @@ cmd_object! {
 
 cmd_object! {
     struct UserDayLimitInfo {
-        day_limit_id: i32,
+        limit_id: i32,
         count: i32,
     }
     struct UserRankInfo {
@@ -195,7 +195,7 @@ cmd_object! {
             year_vip: i32,
         }
     }
-    UserLevelMap {
+    UserLeaveMap {
         Client {}
         Server {
             uid: i32,
@@ -251,7 +251,7 @@ cmd_object! {
         }
         Server {
             uid: i32,
-            nick: [u8; 16],
+            nick: CString<16>,
             black: i8,
         }
     }
@@ -265,7 +265,7 @@ cmd_object! {
     }
     UserDayLimitList {
         Client {
-            day_limit_ids: Vec<i32>,
+            limit_ids: Vec<i32>,
         }
         Server {
             data: Vec<UserDayLimitInfo>,
@@ -314,7 +314,7 @@ cmd_object! {
     }
     UserDayLimitSingle {
         Client {
-            day_limit_id: i32,
+            limit_id: i32,
         }
         Server {
             data: UserDayLimitInfo,
@@ -349,7 +349,7 @@ cmd_object! {
             product_id: u32,
         }
         Server {
-            session: [u8;16],
+            session: CString<16>,
         }
     }
     UserActivityCount {
@@ -391,7 +391,7 @@ cmd_object! {
         }
         Server {
             uid: u32,
-            nick: [u8;16],
+            nick: CString<16>,
             receiver: u32,
             pipe: u8,
             msg: String,

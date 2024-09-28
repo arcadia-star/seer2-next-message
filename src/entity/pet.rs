@@ -4,11 +4,11 @@ cmd_object! {
     struct PetUserInfo {
         pid: i32,
         monster: i32,
-        sex: i8,
+        sex: u8,
         level: u8,
         character: i32,
         potential: i32,
-        flag: i32,
+        flag: u32,
         rider_chip: i32,
         rider_chip_time:i32,
         evolve_level: i32,
@@ -21,8 +21,8 @@ cmd_object! {
     }
     struct PetBaseInfo {
         pid: i32,
-        sex: i8,
-        level: i16,
+        sex: u8,
+        level: u16,
         hp: i32,
         mhp: u32,
         atk: u16,
@@ -31,7 +31,7 @@ cmd_object! {
         spf: u16,
         spd: u16,
         exp_to_level_up: i32,
-        character: i16,
+        character: u16,
         monster: i32,
     }
     struct PetStarSoulInfo {
@@ -40,7 +40,7 @@ cmd_object! {
     }
     struct PetInfo {
         base_info: PetBaseInfo,
-        flag: i32,
+        flag: u32,
         points_unused: u16,
         points_mhp: u16,
         points_atk: u16,
@@ -50,7 +50,7 @@ cmd_object! {
         points_spd: u16,
         skill_ids: Vec<i32>,
         candidate_skill_ids: Vec<i32>,
-        potential_origin: i32,
+        potential: i32,
         battle_level: u32,
         potential_atk: i32,
         potential_def: i32,
@@ -59,11 +59,11 @@ cmd_object! {
         potential_spd: i32,
         potential_mhp: i32,
         star_souls: Vec<PetStarSoulInfo>,
-        height: i16,
-        weight: i16,
-        emblem_id: i32,
+        height: u16,
+        weight: u16,
+        emblem: i32,
         training_count: u16,
-        decoration_id: i32,
+        decoration: i32,
         rider_chip: i32,
         rider_chip_time: u32,
         evolve_level: i32,
@@ -71,14 +71,14 @@ cmd_object! {
     struct PetStorageInfo {
         pid: i32,
         monster: i32,
-        level: i16,
+        level: u16,
         treasure_time: i32,
         evolve_level: i32,
     }
     struct PetDetailInfo {
         flag: i32,
-        height: i16,
-        weight: i16,
+        height: u16,
+        weight: u16,
         potential: i32,
         emblem: i32,
         decoration: i32,
@@ -129,7 +129,7 @@ cmd_object! {
     struct PetFreeInfo {
         pid: i32,
         monster: i32,
-        level: i16,
+        level: u16,
         free_time: i32,
         evolve_level: i32,
     }
@@ -194,8 +194,8 @@ cmd_object! {
             pid: i32,
         }
         Server {
-            second_pet: i32,
-            first_pet: i32,
+            second_pid: i32,
+            first_pid: i32,
         }
     }
     PetSetFollowing {
@@ -234,7 +234,7 @@ cmd_object! {
     }
     PetGetStarLevel {
         Client {
-            pid: u32,
+            pid: i32,
         }
         Server {
             star: Vec<PetStarLevelInfo>,

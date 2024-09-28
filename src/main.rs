@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::fs;
-use std::io::{Error, Write};
+use std::io::Error;
 use std::sync::Arc;
 
-use bytes::{Buf, BufMut};
+use bytes::Buf;
 use log::{error, info};
 use message::entity::LoginGetServerListRsp;
 use message::message::{Message, MessageCommand};
 use message::net::Connection;
+use message::utils::CString;
 use once_cell::sync::Lazy;
 use tokio::net::{TcpListener, TcpSocket};
 use tokio::select;
@@ -48,7 +49,7 @@ async fn main() -> Result<(), Error> {
     }
 }
 
-async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<u32, (Vec<u8>, u16)>>>) -> Result<(), Error> {
+async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<u32, (String, u16)>>>) -> Result<(), Error> {
     let mut client = {
         //flash policy
         if client.discard_flash_policy().await? {
@@ -74,14 +75,7 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<u32, (Vec<u8
         match addr {
             None => unreachable!(),
             Some((ip, port)) => {
-                let mut v = vec![];
-                for x in ip {
-                    if x == 0 {
-                        break;
-                    }
-                    v.push(x);
-                }
-                format!("{}:{}", String::from_utf8(v).unwrap(), port)
+                format!("{}:{}", ip, port)
             }
         }
     } else {
@@ -120,18 +114,17 @@ async fn handle_each(mut client: Connection, map: Arc<Mutex<HashMap<u32, (Vec<u8
                 let t = b.get(4..=5);
                 if let Some(cmd) = t {
                     if cmd == [105, 0] {
-                        let mut m = Message::parse_server(&mut b);
-                        let d: &mut LoginGetServerListRsp = m.body.downcast_mut().unwrap();
+                        let m = Message::parse_server(&mut b);
+                        let d: &LoginGetServerListRsp = m.body.downcast_ref().unwrap();
                         {
                             let mut lock = map.lock().await;
-                            lock.insert(m.uid, (d.servers[1].ip.to_vec(), d.servers[1].port));
+                            lock.insert(m.uid, (d.servers[1].ip.to_string(), d.servers[1].port));
                         }
-                        d.servers[1].id = 1i16;
-                        let mut ip = [0u8; 16];
-                        ip.writer().write(b"127.0.0.1").unwrap();
-                        d.servers[1].ip = ip;
+                        let mut d = d.clone();
+                        d.servers[1].id = 1;
+                        d.servers[1].ip = CString::new("127.0.0.1");
                         d.servers[1].port = CONFIG.port;
-                        b = m.to_server_bytes();
+                        b = Message::new(m.uid, d).to_server_bytes();
                     }
                 }
                 client.write(b.chunk()).await?;

@@ -2,8 +2,8 @@ use super::*;
 
 cmd_object! {
     struct LoginServerInfo {
-        id: i16,
-        ip: [u8; 16],
+        id: u16,
+        ip: CString<16>,
         port: u16,
         user_cnt: i32,
         friend_cnt: i8,
@@ -65,9 +65,9 @@ cmd_object! {
     LoginCreateRole {
         Client {
             session: [u8; 16],
-            revise_tm_cid: i32,
-            nick: [u8; 16],
-            color: i32,
+            revise_tm_cid: u32,
+            nick: CString<16>,
+            color: u32,
             sex: u8,
             top_left_tm_cid: [u64; 8],
         }

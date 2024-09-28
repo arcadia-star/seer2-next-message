@@ -7,13 +7,13 @@ cmd_object! {
     NotifyBuddyAdd {
         Server {
             uid:i32,
-            nick:[u8;16],
+            nick:CString<16>,
         }
     }
     NotifyBuddyReply {
        Server {
             uid:i32,
-            nick:[u8;16],
+            nick:CString<16>,
             black:i8,
         }
     }
@@ -49,7 +49,7 @@ cmd_object! {
         Server {
             typ: u32,
             uid: u32,
-            name: [u8; 16],
+            name: CString<16>,
             _a: Vec<u32>,
             _b: [u32;4],
         }

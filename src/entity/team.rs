@@ -3,7 +3,7 @@ use super::*;
 cmd_object! {
     struct TeamBaseInfo {
         team_id: i32,
-        team_name: [u8; 25],
+        team_name: CString<25>,
         logo_front: i32,
         logo_back: i32,
         logo_color: i32,

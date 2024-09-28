@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 pub struct MessageCommand;
 macro_rules! commands {
@@ -55,7 +55,7 @@ commands! {
     UserLoginDeputize(999, "发送代理地址给online服务器"),
     UserLoginOnline(1001, "Login to online server"),
     UserEnterMap(1002, "地图---玩家进入"),
-    UserLevelMap(1003, "地图---玩家离开"),
+    UserLeaveMap(1003, "地图---玩家离开"),
     UserOnlineList(1004, "地图---玩家列表"),
     ItemGetList(1005, "Get item list"),
     ItemCoinBuy(1006, "Add item or equip"),

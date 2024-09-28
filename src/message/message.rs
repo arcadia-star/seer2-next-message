@@ -1,24 +1,11 @@
 use crate::error::Error;
-use crate::message::MessageCommand;
+use crate::message::{MessageCommand, MessageData};
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use once_cell::sync::Lazy;
-use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
-pub trait MessageData: Debug + Send + Sync + Any {
-    fn command() -> u16
-    where
-        Self: Sized;
-    fn from_bytes(bytes: &mut Bytes) -> Result<Self, Error>
-    where
-        Self: Sized;
-    fn to_bytes(&self) -> Result<Bytes, Error>;
-    fn to_json(&self) -> Result<String, Error>;
-    fn clone_box(&self) -> Box<dyn MessageData>;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-}
-pub struct MessageBody(pub Result<Box<dyn MessageData>, Error>);
+pub struct MessageBody(Result<Box<dyn MessageData>, Error>);
 #[derive(Debug)]
 pub struct Message {
     pub len: u32,
@@ -45,9 +32,9 @@ impl MessageBody {
     pub fn to_hex(&self) -> String {
         hex::encode(self.to_bytes())
     }
-    pub fn downcast_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        match &mut self.0 {
-            Ok(data) => { data.as_any_mut().downcast_mut() }
+    pub fn downcast_ref<T: 'static>(&self) -> Option<&T> {
+        match &self.0 {
+            Ok(data) => { data.as_any_ref().downcast_ref() }
             Err(_) => { None }
         }
     }
@@ -64,7 +51,6 @@ impl Message {
     const HEAD_LEN: usize = 18;
     fn parse(parser: &HashMap<u16, MessageParser>, bytes: &mut Bytes) -> Message {
         let cid = Bytes::copy_from_slice(&bytes[4..6]).get_u16_le();
-        println!("cid: {}", cid);
         let mut bytes = bytes;
         let mut bytes0;
         if MessageCommand::need_encrypt(cid) {
@@ -88,7 +74,7 @@ impl Message {
     pub fn parse_server(bytes: &mut Bytes) -> Message {
         Self::parse(&PARSERS.1, bytes)
     }
-    pub fn to_bytes(&self, code: u32) -> Bytes {
+    fn to_bytes(&self, code: u32) -> Bytes {
         let mut data = self.body.to_bytes();
         let len = Self::HEAD_LEN + data.len();
         let mut bytes = BytesMut::with_capacity(len);
@@ -126,6 +112,16 @@ impl Message {
             seq: 0,
             code: 0,
             body: MessageBody(Ok(Box::new(data))),
+        }
+    }
+    pub fn response_error(&self, code: u32) -> Self {
+        Message {
+            len: 0,
+            cid: self.cid,
+            uid: self.uid,
+            seq: self.seq,
+            code,
+            body: MessageBody(Ok(Box::new(Bytes::new()))),
         }
     }
     pub fn next_seq(&self, seq: u32) -> u32 {

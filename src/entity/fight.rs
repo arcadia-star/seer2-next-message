@@ -14,7 +14,7 @@ cmd_object! {
     }
     struct FightUserInfo {
         uid: u32,
-        nick: [u8;16],
+        nick: CString<16>,
         pets: Vec<FightPetInfo>,
         pets_change: Vec<FightPetInfo>,
     }

@@ -1,4 +1,5 @@
 use crate::message::MessageParser;
+use crate::utils::CString;
 macro_rules! cmd_object_mods {
     ($($m:ident),+) => {
         $(
@@ -86,10 +87,7 @@ macro_rules! cmd_object {
                 serde_json::to_string(self)
                 .map_err(|err|crate::error::Error::SerdeError(err.to_string()))
             }
-            fn clone_box(&self) -> Box<dyn crate::message::MessageData> {
-                Box::new(self.clone())
-            }
-            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+            fn as_any_ref(&self) -> &dyn std::any::Any {
                 self
             }
         }
