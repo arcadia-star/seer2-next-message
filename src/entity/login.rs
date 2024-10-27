@@ -1,3 +1,4 @@
+use crate::utils::Hex;
 use super::*;
 
 cmd_object! {
@@ -16,30 +17,30 @@ cmd_object! {
         Client {}
         Server {
             need_verify: i32,
-            verify_img_id: [u8;16],
+            verify_img_id: Hex<16>,
             verify_img_data: Vec<u8>,
         }
     }
     LoginGetSession {
         Client {
-            password: [u8; 32],
+            password: Hex<32>,
             revise_tm_cid: i32,
             product_id: i32,
             zero: i32,
-            verify_img_id: [u8; 16],
-            verify_code: [u8; 6],
+            verify_img_id: Hex<16>,
+            verify_code: Hex<6>,
             top_left_tm_cid: [u64; 8],
         }
         Server {
             zero: i32,
-            session: [u8; 16],
+            session: Hex<16>,
             has_role: i32,
         }
     }
     LoginActiveCodeFail { Server {} }
     LoginGetServerList {
         Client {
-            session: [u8; 16],
+            session: Hex<16>,
             revise_tm_cid: i32,
         }
         Server {
@@ -64,7 +65,7 @@ cmd_object! {
     }
     LoginCreateRole {
         Client {
-            session: [u8; 16],
+            session: Hex<16>,
             revise_tm_cid: u32,
             nick: CString<16>,
             color: u32,
@@ -76,7 +77,7 @@ cmd_object! {
     LoginCheckCreateRole {Server {}}
     LoginCheckDbRole {
         Client {
-            session: [u8; 16],
+            session: Hex<16>,
         }
         Server {
             role: i32,

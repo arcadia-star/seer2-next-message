@@ -47,7 +47,7 @@ cmd_object! {
         Client {
             buy_id: i32,
             count: i32,
-            pass: [u8;16],
+            pass: Hex<16>,
         }
         Server {
             buy_id: i32,
@@ -62,7 +62,7 @@ cmd_object! {
     ItemBuyMoney {
         Client {
             count: i32,
-            pass: [u8;16],
+            pass: Hex<16>,
         }
         Server {
             money: i32,
@@ -90,9 +90,9 @@ cmd_object! {
     }
     ItemExchange {
         Client {
-            swap: u32,
-            count: u32,
-            data: Vec<u32>,
+            swap: i32,
+            count: i32,
+            data: Vec<i32>,
         }
         Server {
             item_sub: Vec<ItemInfo>,
@@ -111,7 +111,7 @@ cmd_object! {
     }
     ItemMoneyCount {
         Client {
-            data: [u8;16]
+            data: Hex<16>
         }
         Server {
             count: i32,

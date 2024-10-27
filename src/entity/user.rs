@@ -118,13 +118,13 @@ cmd_object! {
         count: i32,
     }
     struct UserRankInfo {
-        uid: u32,
+        uid: i32,
         _a: u32,
-        rank: u32,
+        rank: i32,
         _b: u32,
-        time: u32,
-        score: u32,
-        nick: Vec<u8>,
+        time: i32,
+        score: i32,
+        nick: String,
     }
     struct UserTimeRange {
         start: u32,
@@ -144,8 +144,8 @@ cmd_object! {
         r#type: i32,
         attachment_symble: i32,
         sender_id: i32,
-        sender_name: Vec<u8>,
-        mail_title: Vec<u8>,
+        sender_name: String,
+        mail_title: String,
     }
     struct UserHomeHonorSptInfo {
         id: u32,
@@ -171,7 +171,7 @@ cmd_object! {
     UserLoginOnline {
         Client {
             from_game: i32,
-            session: [u8; 16],
+            session: Hex<16>,
             top_left_tm_cid: [u64; 8],
         }
         Server {
@@ -294,7 +294,7 @@ cmd_object! {
     }
     UserGetActorRank {
         Client {
-            rank_type: u32,
+            rank_type: i32,
             uid: i32,
         }
         Server {
