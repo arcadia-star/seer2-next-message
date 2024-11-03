@@ -1,4 +1,3 @@
-use crate::utils::Hex;
 use super::*;
 
 cmd_object! {
@@ -29,7 +28,7 @@ cmd_object! {
             zero: i32,
             verify_img_id: Hex<16>,
             verify_code: Hex<6>,
-            top_left_tm_cid: [u64; 8],
+            top_left_tm_cid: CString<64>,
         }
         Server {
             zero: i32,
@@ -70,7 +69,7 @@ cmd_object! {
             nick: CString<16>,
             color: u32,
             sex: u8,
-            top_left_tm_cid: [u64; 8],
+            top_left_tm_cid: Hex<64>,
         }
         Server {}
     }

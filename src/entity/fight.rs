@@ -2,48 +2,48 @@ use super::*;
 
 cmd_object! {
     struct FightPetInfo {
-        pid: u32,
-        anger: u32,
-        monster: u32,
+        pid: i32,
+        anger: i32,
+        monster: i32,
         position: u8,
-        level: u16,
-        hp: u32,
-        hp_max: u32,
-        skills: Vec<u32>,
-        evolve_level: u32,
+        level: i16,
+        hp: i32,
+        hp_max: i32,
+        skills: Vec<i32>,
+        evolve_level: i32,
     }
     struct FightUserInfo {
-        uid: u32,
+        uid: i32,
         nick: CString<16>,
         pets: Vec<FightPetInfo>,
         pets_change: Vec<FightPetInfo>,
     }
     struct FightTeamInfo {
         side: u8,
-        leader: u32,
+        leader: i32,
         users: Vec<FightUserInfo>,
     }
     struct FightBuffInfo {
-        buff: u32,
-        round: u32,
+        buff: i32,
+        round: i32,
         dummy0: i32,
         dummy1: i32,
         dummy2: i32,
     }
     struct FightHurtInfo {
-        atker: u8,
-        uid: u32,
-        pid: u32,
-        skill: u32,
+        attack: u8,
+        uid: i32,
+        pid: i32,
+        skill: i32,
         position: u8,
-        hp: u32,
-        hp_max: u32,
-        anger: u16,
+        hp: i32,
+        hpm: i32,
+        anger: i16,
         dying: u8,
         atk: u8,
         def: u8,
-        sp_atk: u8,
-        sp_def: u8,
+        spk: u8,
+        spf: u8,
         spd: u8,
         buff: Vec<FightBuffInfo>,
     }
@@ -68,14 +68,14 @@ cmd_object! {
         change_hp: i32,
     }
     struct FightPetAngerInfo {
-        uid: u32,
-        pid: u32,
-        anger: u32,
+        uid: i32,
+        pid: i32,
+        anger: i32,
     }
     struct FightPetHpInfo {
-        uid: u32,
-        pid: u32,
-        hp: u32,
+        uid: i32,
+        pid: i32,
+        hp: i32,
     }
     struct FightPetMorphInfo {
         uid: u32,
@@ -115,11 +115,11 @@ cmd_object! {
     FightHurtNotify {
         Server {
             res: Vec<FightHurtInfo>,
-            notify_index: u32,
-            critical: u32,
-            skill_type_delation: u32,
-            atk_times: u32,
-            changed_hp: u32,
+            notify_index: i32,
+            critical: i32,
+            skill_type_delation: i32,
+            atk_times: i32,
+            changed_hp: i32,
         }
     }
     FightLoadMapNotify {
@@ -182,7 +182,7 @@ cmd_object! {
     }
     FightEscapeNotify {
         Server {
-            uid: u32,
+            uid: i32,
         }
     }
     FightPetPositionNotify {
@@ -216,16 +216,16 @@ cmd_object! {
     }
     FightCmdCatch {
         Client {
-            item: u32,
+            item: i32,
         }
         Server {
-            success: u32,
-            pid: u32,
+            success: i32,
+            pid: i32,
         }
     }
     FightCmdChange {
         Client {
-            pid: u32,
+            pid: i32,
         }
         Server {
             _a: u8,
@@ -245,11 +245,11 @@ cmd_object! {
     }
     FightCmdSkill {
         Client {
-            skill_id: u32,
+            skill: i32,
         }
         Server {
-            pid: u32,
-            skill_id: u32,
+            pid: i32,
+            skill: i32,
         }
     }
     FightCmdEscape {
@@ -277,7 +277,7 @@ cmd_object! {
     }
     FightWild {
         Client {
-            index: u32,
+            index: i32,
         }
         Server {}
     }

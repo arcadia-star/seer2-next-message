@@ -7,7 +7,7 @@ cmd_object! {
     }
     struct QuestClientBuffer {
         status: u8,
-        extra_data: [u8;3],
+        extra_data: Hex<3>,
     }
     struct QuestBuffer {
         quest_id: i32,

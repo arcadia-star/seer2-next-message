@@ -25,9 +25,9 @@ cmd_object! {
             item_sub: Vec<ItemInfo>,
         }
     }
-    NotifyPetSpawnLobby {
+    NotifyPetSpawn {
         Server {
-            pets: Vec<PetSpawnLobbyInfo>,
+            pets: Vec<PetSpawnInfo>,
         }
     }
     NotifyPetItemUpdate {
@@ -40,9 +40,9 @@ cmd_object! {
             time: u32,
         }
     }
-    NotifyMapRarePet {
+    NotifyPetRareSpawn {
         Server {
-            pets: Vec<PetMapRareInfo>,
+            pets: Vec<PetRareSpawnInfo>,
         }
     }
     NotifyBeatCaptain {
@@ -51,7 +51,7 @@ cmd_object! {
             uid: u32,
             name: CString<16>,
             _a: Vec<u32>,
-            _b: [u32;4],
+            _b: Hex<16>,
         }
     }
     NotifyServerEvent {

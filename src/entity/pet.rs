@@ -1,6 +1,23 @@
 use super::*;
 
 cmd_object! {
+    struct PetLearnInfo {
+        unused: u16,
+        hpm: u16,
+        atk: u16,
+        spk: u16,
+        def: u16,
+        spf: u16,
+        spd: u16,
+    }
+    struct PetBornInfo {
+        atk: i32,
+        def: i32,
+        spk: i32,
+        spf: i32,
+        spd: i32,
+        hpm: i32,
+    }
     struct PetUserInfo {
         pid: i32,
         monster: i32,
@@ -24,7 +41,7 @@ cmd_object! {
         sex: u8,
         level: u16,
         hp: i32,
-        mhp: u32,
+        mhp: i32,
         atk: u16,
         spk: u16,
         def: u16,
@@ -39,25 +56,14 @@ cmd_object! {
         level: u32,
     }
     struct PetInfo {
-        base_info: PetBaseInfo,
+        base: PetBaseInfo,
         flag: u32,
-        points_unused: u16,
-        points_mhp: u16,
-        points_atk: u16,
-        points_spk: u16,
-        points_def: u16,
-        points_spf: u16,
-        points_spd: u16,
+        learn: PetLearnInfo,
         skill_ids: Vec<i32>,
         candidate_skill_ids: Vec<i32>,
         potential: i32,
         battle_level: u32,
-        potential_atk: i32,
-        potential_def: i32,
-        potential_spk: i32,
-        potential_spf: i32,
-        potential_spd: i32,
-        potential_mhp: i32,
+        born: PetBornInfo,
         star_souls: Vec<PetStarSoulInfo>,
         height: u16,
         weight: u16,
@@ -84,11 +90,11 @@ cmd_object! {
         decoration: i32,
         evolve_level: i32,
     }
-    struct PetSpawnLobbyInfo {
-        index: u32,
-        monster: u32,
-        level: u16,
-        _a: u32,
+    struct PetSpawnInfo {
+        index: i32,
+        monster: i32,
+        level: i16,
+        _a: i32,
         _b: u8,
     }
     struct PetStarLevelInfo {
@@ -108,7 +114,7 @@ cmd_object! {
         buff_swf: u32,
     }
     struct PetSptInfo {
-        spt_id: u32,
+        spt: i32,
         status: u8,
     }
     struct PetItemInfo {
@@ -119,12 +125,12 @@ cmd_object! {
         pid: u32,
         item: Vec<PetItemInfo>,
     }
-    struct PetMapRareInfo {
-        index: u32,
-        id: u32,
-        level: u16,
+    struct PetRareSpawnInfo {
+        index: i32,
+        monster: i32,
+        level: i16,
         time: u32,
-        r#type: u8,
+        typ: i8,
     }
     struct PetFreeInfo {
         pid: i32,
@@ -184,9 +190,11 @@ cmd_object! {
             pid: i32,
         }
         Server {
-            base_info: PetBaseInfo,
-            detail_info: PetDetailInfo,
-            _a: [u16; 21],
+            base: PetBaseInfo,
+            detail: PetDetailInfo,
+            learn: PetLearnInfo,
+            _a: i32,
+            born: PetBornInfo,
         }
     }
     PetSetFighting {
@@ -194,8 +202,8 @@ cmd_object! {
             pid: i32,
         }
         Server {
-            second_pid: i32,
-            first_pid: i32,
+            second: i32,
+            first: i32,
         }
     }
     PetSetFollowing {
@@ -213,13 +221,24 @@ cmd_object! {
     PetPutStorage {
         Client {
             pid: i32,
-            put_flag: i8,
+            bag: i8,
         }
         Server {
-            first_pid: i32,
+            first: i32,
             pid: i32,
-            status: u8,
-            pets: Vec<PetInfo>,
+            bag: i8,
+            pet: Option<PetInfo>,
+        }
+    }
+    PetPutBagStorage {
+        Client {
+            pid: i32,
+            bag: i8,
+        }
+        Server {
+            pid: i32,
+            bag: i8,
+            pet: Option<PetInfo>,
         }
     }
     PetSetFree {
@@ -246,10 +265,10 @@ cmd_object! {
             spt: Vec<PetSptInfo>,
         }
     }
-    PetDicRewardStatus {
+    PetRewardStatus {
         Client {}
         Server {
-            data: [u64;25],
+            data: Hex<200>,
         }
     }
     PetStartOnHook {

@@ -172,7 +172,7 @@ cmd_object! {
         Client {
             from_game: i32,
             session: Hex<16>,
-            top_left_tm_cid: [u64; 8],
+            top_left_tm_cid: CString<64>,
         }
         Server {
             login: UserLoginInfo,
@@ -366,13 +366,13 @@ cmd_object! {
         }
         Server {
             buffer_id: i32,
-            buffer_data: [u16;25],
+            buffer_data: Hex<50>,
         }
     }
     UserBufferWrite {
         Client {
             buffer_id: i32,
-            buffer_data: [u16;25],
+            buffer_data: Hex<50>,
         }
         Server {}
     }

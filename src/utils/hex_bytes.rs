@@ -30,7 +30,11 @@ impl<const N: usize> Serialize for Hex<N> {
     where
         S: Serializer,
     {
-        serializer.serialize_bytes(&self.data)
+        let mut bytes = [0u8; N];
+        for i in 0..self.data.len().min(N) {
+            bytes[i] = self.data[i];
+        }
+        serializer.serialize_bytes(&bytes)
     }
 }
 impl<'de, const N: usize> Deserialize<'de> for Hex<N> {
