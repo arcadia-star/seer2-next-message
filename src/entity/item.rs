@@ -21,6 +21,11 @@ cmd_object! {
         item_sub: Vec<ItemInfo>,
         pet_add: ItemPetInfo,
     }
+    struct ItemPetRideInfo {
+        chip: i32,
+        pid: i32,
+        time: i32,
+    }
 }
 
 cmd_object! {
@@ -97,10 +102,8 @@ cmd_object! {
         Server {
             item_sub: Vec<ItemInfo>,
             item_add: Vec<ItemInfo>,
-            pet_add: ItemPetInfo,
-            ride_chip_id: u32,
-            pid: u32,
-            ride_chip_time: u32,
+            pet: ItemPetInfo,
+            ride: ItemPetRideInfo,
         }
     }
     ItemMeeMoneyCount {

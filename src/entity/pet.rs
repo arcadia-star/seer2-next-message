@@ -26,14 +26,14 @@ cmd_object! {
         character: i32,
         potential: i32,
         flag: u32,
-        rider_chip: i32,
-        rider_chip_time:i32,
+        ride_chip: i32,
+        ride_time:i32,
         evolve_level: i32,
     }
     struct PetSimpleInfo {
-        pid: u32,
-        monster: u32,
-        level: u16,
+        pid: i32,
+        monster: i32,
+        level: i16,
         state: u32,
     }
     struct PetBaseInfo {
@@ -59,8 +59,8 @@ cmd_object! {
         base: PetBaseInfo,
         flag: u32,
         learn: PetLearnInfo,
-        skill_ids: Vec<i32>,
-        candidate_skill_ids: Vec<i32>,
+        skills: Vec<i32>,
+        candidate_skills: Vec<i32>,
         potential: i32,
         battle_level: u32,
         born: PetBornInfo,
@@ -70,8 +70,8 @@ cmd_object! {
         emblem: i32,
         training_count: u16,
         decoration: i32,
-        rider_chip: i32,
-        rider_chip_time: u32,
+        ride_chip: i32,
+        ride_time: i32,
         evolve_level: i32,
     }
     struct PetStorageInfo {
@@ -173,6 +173,18 @@ cmd_object! {
         skills: Vec<i32>,
         flag: i32,
     }
+    struct PetDictionaryInfo {
+        monster: i32,
+        flag: u8,
+    }
+    struct PetDictionaryItemInfo {
+        item: i32,
+        count: i32,
+    }
+    struct PetDictionaryPetInfo {
+        monster: i32,
+        pid: i32,
+    }
 }
 
 cmd_object! {
@@ -241,6 +253,16 @@ cmd_object! {
             pet: Option<PetInfo>,
         }
     }
+    PetPutBagExchange {
+        Client {
+            bag_pid: i32,
+            storage_pid: i32,
+        }
+        Server {
+            bag_pid: i32,
+            storage_pid: i32,
+        }
+    }
     PetSetFree {
         Client {
             pid: u32,
@@ -301,13 +323,13 @@ cmd_object! {
     }
     PetReplaceSkill {
         Client {
-            pid: u32,
-            skill_ids: Vec<u32>,
+            pid: i32,
+            skills: Vec<i32>,
         }
         Server {
-            pid: u32,
-            skill_ids: Vec<u32>,
-            candidate_skill_ids: Vec<u32>,
+            pid: i32,
+            skills: Vec<i32>,
+            candidate_skills: Vec<i32>,
         }
     }
     PetAddLearningPoint {
@@ -348,6 +370,28 @@ cmd_object! {
         }
         Server {
             skills: Vec<i32>,
+        }
+    }
+    PetDictionaryList {
+        Client {}
+        Server {
+            gained: i32,
+            pets: Vec<PetDictionaryInfo>,
+        }
+    }
+    PetDictionaryGift {
+        Client {}
+        Server {
+            data: Vec<i32>,
+        }
+    }
+    PetDictionaryReward {
+        Client {
+            id: i32,
+        }
+        Server {
+            items: Vec<PetDictionaryItemInfo>,
+            pets: Vec<PetDictionaryPetInfo>,
         }
     }
 }

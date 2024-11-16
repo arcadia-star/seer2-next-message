@@ -70,4 +70,7 @@ impl<const N: usize> Hex<N> {
     pub fn new(data: Bytes) -> Hex<N> {
         Self { data }
     }
+    pub fn new_copy(data: &[u8]) -> Hex<N> {
+        Self { data: Bytes::copy_from_slice(data) }
+    }
 }

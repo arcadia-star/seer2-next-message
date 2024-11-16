@@ -2,12 +2,12 @@ use super::*;
 
 cmd_object! {
     struct VipSimpleInfo {
-        vip_flag: i8,
-        vip_level: i8,
+        vip: i8,
+        level: i8,
     }
     struct VipBaseInfo {
-        pay_flag: i32,
-        simple_info: VipSimpleInfo,
+        pay: i32,
+        simple: VipSimpleInfo,
         vip_point: i32,
         left_day: i32,
         equip_ball_ids: Vec<i32>,

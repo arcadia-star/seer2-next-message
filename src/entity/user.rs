@@ -23,8 +23,8 @@ cmd_object! {
         loc_y: i32,
         medal: i32,
         create_time: i32,
-        equip_ids: Vec<i32>,
-        noo_equip_ids: Vec<i32>,
+        equips: Vec<i32>,
+        noo_equips: Vec<i32>,
     }
     struct UserLoginInfo {
         user: UserBaseInfo,
@@ -59,7 +59,7 @@ cmd_object! {
         noo_info: UserNooInfo,
         noo_time_infos: Vec<UserNooTimeInfo>,
 
-        expired_equip_ids: Vec<i32>,
+        expired_equips: Vec<i32>,
 
         online_days: i32,
         gift_index: i32,
@@ -91,8 +91,8 @@ cmd_object! {
         nick: CString<16>,
         color: i32,
         score: i32,
-        equip_ids: Vec<i32>,
-        vip_info: VipSimpleInfo,
+        equips: Vec<i32>,
+        vip: VipSimpleInfo,
         plant_lv: i32,
     }
     struct UserDetailInfo {
@@ -182,8 +182,8 @@ cmd_object! {
         Client {
             map: i32,
             scene: i32,
-            loc_x: i32,
-            loc_y: i32,
+            x: i32,
+            y: i32,
             behavior: i32,
         }
         Server {
@@ -349,7 +349,7 @@ cmd_object! {
             product_id: u32,
         }
         Server {
-            session: CString<16>,
+            session: Hex<16>,
         }
     }
     UserActivityCount {
@@ -362,17 +362,17 @@ cmd_object! {
     }
     UserBufferRead {
         Client {
-            buffer_id: i32,
+            id: i32,
         }
         Server {
-            buffer_id: i32,
-            buffer_data: Hex<50>,
+            id: i32,
+            data: Hex<50>,
         }
     }
     UserBufferWrite {
         Client {
-            buffer_id: i32,
-            buffer_data: Hex<50>,
+            id: i32,
+            data: Hex<50>,
         }
         Server {}
     }
@@ -443,6 +443,14 @@ cmd_object! {
             equips: Vec<i32>,
             noo_equips: Vec<i32>,
         }
+    }
+    UserChangeNick {
+        Client {}
+        Server {}
+    }
+    UserChangeSignature {
+        Client {}
+        Server {}
     }
     UserDigMine {
         Client {
