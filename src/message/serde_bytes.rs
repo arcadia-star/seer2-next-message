@@ -152,18 +152,33 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
 
-    fn serialize_unit_variant(self, _: &'static str, _: u32, _: &'static str) -> Result<Self::Ok, Self::Error> {
+    fn serialize_unit_variant(
+        self,
+        _: &'static str,
+        _: u32,
+        _: &'static str,
+    ) -> Result<Self::Ok, Self::Error> {
         unimplemented!()
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(self, _: &'static str, _: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_newtype_struct<T: ?Sized>(
+        self,
+        _: &'static str,
+        _: &T,
+    ) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
         unimplemented!()
     }
 
-    fn serialize_newtype_variant<T: ?Sized>(self, _: &'static str, _: u32, _: &'static str, _: &T) -> Result<Self::Ok, Self::Error>
+    fn serialize_newtype_variant<T: ?Sized>(
+        self,
+        _: &'static str,
+        _: u32,
+        _: &'static str,
+        _: &T,
+    ) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
@@ -184,11 +199,21 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.serialize_seq(None)
     }
 
-    fn serialize_tuple_struct(self, _: &'static str, _: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
+    fn serialize_tuple_struct(
+        self,
+        _: &'static str,
+        _: usize,
+    ) -> Result<Self::SerializeTupleStruct, Self::Error> {
         unimplemented!()
     }
 
-    fn serialize_tuple_variant(self, _: &'static str, _: u32, _: &'static str, _: usize) -> Result<Self::SerializeTupleVariant, Self::Error> {
+    fn serialize_tuple_variant(
+        self,
+        _: &'static str,
+        _: u32,
+        _: &'static str,
+        _: usize,
+    ) -> Result<Self::SerializeTupleVariant, Self::Error> {
         unimplemented!()
     }
 
@@ -196,11 +221,21 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         unimplemented!()
     }
 
-    fn serialize_struct(self, _: &'static str, _: usize) -> Result<Self::SerializeStruct, Self::Error> {
+    fn serialize_struct(
+        self,
+        _: &'static str,
+        _: usize,
+    ) -> Result<Self::SerializeStruct, Self::Error> {
         self.serialize_seq(None)
     }
 
-    fn serialize_struct_variant(self, _: &'static str, _: u32, _: &'static str, _: usize) -> Result<Self::SerializeStructVariant, Self::Error> {
+    fn serialize_struct_variant(
+        self,
+        _: &'static str,
+        _: u32,
+        _: &'static str,
+        _: usize,
+    ) -> Result<Self::SerializeStructVariant, Self::Error> {
         unimplemented!()
     }
 }
@@ -448,7 +483,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         let len = self.bytes.get_u32_le() as usize;
         ensure_len!(self, len);
         let bytes = self.bytes.copy_to_bytes(len);
-        visitor.visit_string(String::from_utf8(bytes.to_vec()).map_err(|e| SerdeError(e.to_string()))?)
+        visitor
+            .visit_string(String::from_utf8(bytes.to_vec()).map_err(|e| SerdeError(e.to_string()))?)
     }
 
     fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -504,17 +540,28 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     {
         ensure_len!(self, 4);
         let len = self.bytes.get_u32_le();
-        visitor.visit_seq(SeqSeparate { de: &mut self, len: Some(len) })
+        visitor.visit_seq(SeqSeparate {
+            de: &mut self,
+            len: Some(len),
+        })
     }
 
     fn deserialize_tuple<V>(mut self, _: usize, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqSeparate { de: &mut self, len: None })
+        visitor.visit_seq(SeqSeparate {
+            de: &mut self,
+            len: None,
+        })
     }
 
-    fn deserialize_tuple_struct<V>(self, _: &'static str, _: usize, _: V) -> Result<V::Value, Self::Error>
+    fn deserialize_tuple_struct<V>(
+        self,
+        _: &'static str,
+        _: usize,
+        _: V,
+    ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
@@ -528,14 +575,27 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         unimplemented!()
     }
 
-    fn deserialize_struct<V>(mut self, _: &'static str, _: &'static [&'static str], visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_struct<V>(
+        mut self,
+        _: &'static str,
+        _: &'static [&'static str],
+        visitor: V,
+    ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqSeparate { de: &mut self, len: None })
+        visitor.visit_seq(SeqSeparate {
+            de: &mut self,
+            len: None,
+        })
     }
 
-    fn deserialize_enum<V>(self, _: &'static str, _: &'static [&'static str], _: V) -> Result<V::Value, Self::Error>
+    fn deserialize_enum<V>(
+        self,
+        _: &'static str,
+        _: &'static [&'static str],
+        _: V,
+    ) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
@@ -587,7 +647,9 @@ pub fn to_bytes<T>(value: &T) -> Result<Bytes, SerdeError>
 where
     T: Serialize,
 {
-    let mut serializer = Serializer { bytes: BytesMut::new() };
+    let mut serializer = Serializer {
+        bytes: BytesMut::new(),
+    };
     value.serialize(&mut serializer)?;
     Ok(serializer.bytes.freeze())
 }

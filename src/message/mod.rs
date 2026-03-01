@@ -1,9 +1,9 @@
 mod command;
-pub(crate) mod encrypt;
+mod encrypt;
 mod message;
-pub(crate) mod serde_bytes;
-mod message_data;
+mod serde_bytes;
 
-pub use command::MessageCommand;
-pub use message::{Message, MessageParser};
-pub use message_data::MessageData;
+pub use command::Command;
+pub use encrypt::{decrypt, encrypt};
+pub use message::{Body, Message, Parser};
+pub use serde_bytes::{from_bytes, to_bytes, SerdeError};

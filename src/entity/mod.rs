@@ -1,4 +1,3 @@
-use crate::message::MessageParser;
 use crate::utils::CString;
 use crate::utils::Hex;
 macro_rules! cmd_object_mods {
@@ -7,12 +6,12 @@ macro_rules! cmd_object_mods {
             mod $m;
             pub use $m::*;
         )+
-        pub(crate) fn client_parser()-> Vec<(u16, MessageParser)>{
+        pub fn client_parser()-> Vec<(u16, crate::message::Parser)>{
             vec![
                 $( $m::client_parser(), )+
             ].into_iter().flat_map(|e|e.into_iter()).collect()
         }
-        pub(crate) fn server_parser()-> Vec<(u16, MessageParser)>{
+        pub fn server_parser()-> Vec<(u16, crate::message::Parser)>{
             vec![
                 $( $m::server_parser(), )+
             ].into_iter().flat_map(|e|e.into_iter()).collect()
@@ -46,12 +45,12 @@ macro_rules! cmd_object {
             cmd_object!{@message [<$cmd Rsp>] $cmd}
             )?)*
 
-            pub(super) fn client_parser()-> Vec<(u16, MessageParser)> {
+            pub(super) fn client_parser()-> Vec<(u16, crate::message::Parser)> {
                vec![
                    $($(cmd_object!{@parser $cmd, [<$cmd Req>], [$($client_field)*] },)?)*
                ]
             }
-            pub(super) fn server_parser()-> Vec<(u16, MessageParser)> {
+            pub(super) fn server_parser()-> Vec<(u16, crate::message::Parser)> {
                vec![
                    $($(cmd_object!{@parser $cmd, [<$cmd Rsp>], [$($server_field)*] },)?)*
                ]
@@ -66,30 +65,29 @@ macro_rules! cmd_object {
     };
     (@parser $cmd:ident, $ident:ident, $ignore:tt) => {
         (
-            crate::message::MessageCommand::$cmd,
-            |data: &mut bytes::Bytes|{Ok(Box::new(<$ident as crate::message::MessageData>::from_bytes(data)?))}
+            crate::message::Command::$cmd.cid(),
+            |data: &mut bytes::Bytes| {
+                use crate::message::Body;
+                Ok(Box::new($ident::from_bytes(data)?))
+            }
         )
     };
     (@message $ident:ident $cmd:ident) => {
-        impl crate::message::MessageData for $ident {
-            fn command() -> u16 {
-                crate::message::MessageCommand::$cmd
-            }
-            fn from_bytes(bytes: &mut bytes::Bytes) -> Result<Self, crate::error::Error> {
-                let bak = bytes.clone();
-                crate::message::serde_bytes::from_bytes(bytes)
-                .map_err(|err|crate::error::Error::ParseError(err.0,bak))
-            }
-            fn to_bytes(&self) -> Result<bytes::Bytes, crate::error::Error> {
-                crate::message::serde_bytes::to_bytes(self)
-                .map_err(|err|crate::error::Error::SerdeError(err.0))
-            }
-            fn to_json(&self) -> Result<String, crate::error::Error> {
-                serde_json::to_string(self)
-                .map_err(|err|crate::error::Error::SerdeError(err.to_string()))
+        impl $ident {
+
+        }
+        impl crate::message::Body for $ident {
+            fn command() -> crate::message::Command {
+                crate::message::Command::$cmd
             }
             fn as_any_ref(&self) -> &dyn std::any::Any {
                 self
+            }
+            fn from_bytes(bytes: &mut bytes::Bytes) -> Result<Self, crate::message::SerdeError> {
+                crate::message::from_bytes(bytes)
+            }
+            fn to_bytes(&self) -> Result<bytes::Bytes, crate::message::SerdeError> {
+                crate::message::to_bytes(self)
             }
         }
     };

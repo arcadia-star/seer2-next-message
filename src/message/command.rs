@@ -1,26 +1,27 @@
-use once_cell::sync::Lazy;
-use std::collections::HashMap;
-
-pub struct MessageCommand;
 macro_rules! commands {
     ($($ident:ident($cid:literal,$desc:literal)),+ $(,)?) => {
-        static COMMANDS: Lazy<HashMap<u16, (u16,&str,&str)>> = Lazy::new(|| {
-            vec![
-                $(($cid,($cid,stringify!($ident),$desc))),+
-            ].into_iter().collect()
-        });
-        impl MessageCommand {
-            $(
-            #[allow(non_upper_case_globals)]
-            pub const $ident: u16 = $cid;
-            )+
-            pub fn desc(cid: u16) -> String {
-                COMMANDS.get(&cid).map(|e|e.2.to_string()).unwrap_or_else(||format!("unknown-{cid}"))
+        pub enum Command {
+            Unknown(u16),
+            $(#[allow(non_camel_case_types)]$ident,)+
+        }
+        impl Command {
+            pub const fn cid(&self) -> u16 {
+                match self {
+                    Self::Unknown(cid) => *cid,
+                    $(Self::$ident => $cid,)+
+                }
             }
-            pub fn commonds() -> Vec<u16> {
-                vec![
-                    $($cid),+
-                ]
+            pub fn desc(&self) -> &'static str {
+                match self {
+                    Self::Unknown(_) => "unknown",
+                    $(Self::$ident => $desc,)+
+                }
+            }
+            pub fn from_cid(cid: u16) -> Self {
+                match cid {
+                    $($cid => Self::$ident,)+
+                    cid => Self::Unknown(cid)
+                }
             }
         }
     };
@@ -384,8 +385,8 @@ commands! {
     __TEAM_Reject_1571(1571, "战队---拒绝加入战队"),
     __SERVER_MESSAGE_8000(8000, "Server message"),
 }
-impl MessageCommand {
-    pub(crate) const fn need_encrypt(cid: u16) -> bool {
-        cid >= MessageCommand::UserLoginOnline || cid < MessageCommand::LoginGetVerifyCode
+impl Command {
+    pub(crate) const fn has_encrypt(cid: u16) -> bool {
+        cid >= Command::UserLoginOnline.cid() || cid < Command::LoginGetVerifyCode.cid()
     }
 }

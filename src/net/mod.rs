@@ -1,3 +1,3 @@
-pub use connection::Connection;
+mod frame;
 
-mod connection;
+pub use frame::{FlashPolicyCodec, MessageCodec};
