@@ -1,5 +1,6 @@
 use crate::utils::CString;
 use crate::utils::Hex;
+use crate::utils::UTFString;
 macro_rules! cmd_object_mods {
     ($($m:ident),+) => {
         $(

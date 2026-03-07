@@ -3,7 +3,7 @@ use bytes::{BufMut, Bytes, BytesMut};
 use std::any::Any;
 use std::fmt::Debug;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Message {
     pub len: u32,
     pub cid: u16,
@@ -13,12 +13,13 @@ pub struct Message {
     pub body: Bytes,
 }
 impl Message {
+    pub const HEADER_LEN: u32 = 18;
     pub fn next_sequence(seq: u32, cid: u16, len: u32) -> u32 {
         let cid = cid as u32;
         cid % 13 + len % 21 + seq + 147 - seq / 7
     }
     pub fn update_len(&mut self) {
-        self.len = 18 + self.body.len() as u32;
+        self.len = Self::HEADER_LEN + self.body.len() as u32;
     }
     pub fn sign_code(&mut self) {
         let mut bytes_mut = BytesMut::new();

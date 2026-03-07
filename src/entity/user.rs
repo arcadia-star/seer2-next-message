@@ -124,7 +124,7 @@ cmd_object! {
         _b: u32,
         time: i32,
         score: i32,
-        nick: String,
+        nick: UTFString,
     }
     struct UserTimeRange {
         start: u32,
@@ -144,8 +144,15 @@ cmd_object! {
         r#type: i32,
         attachment_symble: i32,
         sender_id: i32,
-        sender_name: String,
-        mail_title: String,
+        sender_name: UTFString,
+        mail_title: UTFString,
+    }
+    struct UserMailAttachmentInfo {
+        item_id: i32,
+        count: i32,
+        flag: i32,
+        _a: i32,
+        _b: i32,
     }
     struct UserHomeHonorSptInfo {
         id: u32,
@@ -292,6 +299,21 @@ cmd_object! {
             rank: Vec<UserRankInfo>,
         }
     }
+    UserGetRankHistory {
+        Client {
+            rank_id: u32,
+            min: u32,
+            max: u32,
+            start_time: i32,
+            end_time: i32,
+        }
+        Server {
+            max_id: u32,
+            mid_id: u32,
+            min_id: u32,
+            rank: Vec<UserRankInfo>,
+        }
+    }
     UserGetActorRank {
         Client {
             rank_type: i32,
@@ -378,23 +400,51 @@ cmd_object! {
     }
     UserMailList {
         Client {
-            uid: u32,
+            uid: i32,
         }
         Server {
             mails: Vec<UserMailInfo>,
         }
     }
+    UserMailDetails {
+        Client {
+            uid: i32,
+            mail_id: i32,
+        }
+        Server {
+            mail_id: i32,
+            raw_send_time: i32,
+            r#type: i32,
+            attachment_symble: i32,
+            sender_id: i32,
+            sender_name: UTFString,
+            mail_title: UTFString,
+            content: UTFString,
+            attachments: Vec<UserMailAttachmentInfo>,
+            has_read: i32,
+        }
+    }
+    UserMailAward {
+        Client {
+            uid: i32,
+            mail_id: i32,
+        }
+        Server {
+            success: i32,
+            item_id: i32,
+        }
+    }
     UserChat {
         Client {
             uid: u32,
-            msg: String,
+            msg: UTFString,
         }
         Server {
             uid: u32,
             nick: CString<16>,
             receiver: u32,
             pipe: u8,
-            msg: String,
+            msg: UTFString,
         }
     }
     UserHomeHonor {

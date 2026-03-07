@@ -65,4 +65,9 @@ cmd_object! {
             pids: Vec<i32>,
         }
     }
+    NotifyUserMail {
+        Server {
+            mail: UserMailInfo,
+        }
+    }
 }

@@ -1,13 +1,13 @@
+use demo::log_message;
 use futures::{SinkExt, StreamExt};
-use message::entity::{client_parser, server_parser, LoginGetServerListRsp};
-use message::message::{Body, Command, Message, Parser};
+use message::entity::LoginGetServerListRsp;
+use message::message::{Body, Command, Message};
 use message::net::{FlashPolicyCodec, MessageCodec};
 use message::utils::CString;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::io::{Error, ErrorKind};
 use std::net::SocketAddr;
-use std::ops::Deref;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
 use tokio_util::codec::Framed;
@@ -26,11 +26,6 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
 });
 
 static SERVER: Lazy<Mutex<HashMap<u32, String>>> = Lazy::new(|| Default::default());
-static CLIENT_PARSER: Lazy<HashMap<u16, Parser>> =
-    Lazy::new(|| client_parser().into_iter().collect());
-static SERVER_PARSER: Lazy<HashMap<u16, Parser>> =
-    Lazy::new(|| server_parser().into_iter().collect());
-
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt::init();
@@ -75,7 +70,7 @@ async fn process_connection(steam: TcpStream, addr: SocketAddr) -> Result<(), Er
             return Err(Error::new(ErrorKind::Other, "first frame is empty"));
         }
         Some(Ok(msg)) => {
-            process_message(true, &addr, &msg);
+            log_message(true, &addr, &msg);
             let proxy = if msg.cid == Command::UserLoginOnline.cid() {
                 match SERVER.lock().await.get(&msg.uid) {
                     Some(addr) => addr.clone(),
@@ -98,7 +93,7 @@ async fn process_connection(steam: TcpStream, addr: SocketAddr) -> Result<(), Er
                 if let Some(res) = client {
                     match res {
                         Ok(msg) => {
-                            process_message(true, &addr, & msg);
+                            log_message(true, &addr, & msg);
                             framed1.send(msg).await?;
                         }
                         Err(e) => {
@@ -115,7 +110,7 @@ async fn process_connection(steam: TcpStream, addr: SocketAddr) -> Result<(), Er
                 if let Some(res) = server {
                     match res {
                         Ok(mut msg) => {
-                            process_message(false, &addr, &msg);
+                            log_message(false, &addr, &msg);
                             may_record_proxy(&mut msg).await;
                             framed.send(msg).await?;
                         }
@@ -151,58 +146,6 @@ async fn may_record_proxy(msg: &mut Message) {
             if let Ok(bytes) = rsp.to_bytes() {
                 msg.body = bytes;
             }
-        }
-    }
-}
-
-fn process_message(client: bool, addr: &SocketAddr, msg: &Message) {
-    match (if client {
-        CLIENT_PARSER.deref()
-    } else {
-        SERVER_PARSER.deref()
-    })
-    .get(&msg.cid)
-    {
-        Some(parser) => {
-            let mut bytes = msg.body.clone();
-            match parser(&mut bytes) {
-                Ok(body) => {
-                    info!(
-                        ?addr,
-                        "len:{} cid:{} uid:{} seq:{} code:{} body:{:?}",
-                        msg.len,
-                        msg.cid,
-                        msg.uid,
-                        msg.seq,
-                        msg.code,
-                        body
-                    );
-                }
-                Err(err) => {
-                    error!(
-                        ?addr,
-                        "len:{} cid:{} uid:{} seq:{} code:{} hex:{} error:{err}",
-                        msg.len,
-                        msg.cid,
-                        msg.uid,
-                        msg.seq,
-                        msg.code,
-                        hex::encode(&msg.body)
-                    );
-                }
-            }
-        }
-        None => {
-            info!(
-                ?addr,
-                "len:{} cid:{} uid:{} seq:{} code:{} hex:{}",
-                msg.len,
-                msg.cid,
-                msg.uid,
-                msg.seq,
-                msg.code,
-                hex::encode(&msg.body)
-            );
         }
     }
 }
