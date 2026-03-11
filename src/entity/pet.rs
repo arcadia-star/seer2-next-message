@@ -197,7 +197,7 @@ cmd_object! {
             pets: Vec<PetStorageInfo>,
         }
     }
-    PetGetSimple {
+    PetGetStorageSimple {
         Client {
             pid: i32,
         }
@@ -207,6 +207,15 @@ cmd_object! {
             learn: PetLearnInfo,
             _a: i32,
             born: PetBornInfo,
+        }
+    }
+    PetGetInfo {
+        Client {
+            pid: i32,
+        }
+        Server {
+            base: PetBaseInfo,
+            potential: i32,
         }
     }
     PetSetFighting {
@@ -230,7 +239,7 @@ cmd_object! {
             data: Vec<PetUserInfo>,
         }
     }
-    PetPutStorage {
+    PetPutBag {
         Client {
             pid: i32,
             bag: i8,
@@ -263,15 +272,23 @@ cmd_object! {
             storage_pid: i32,
         }
     }
-    PetSetFree {
+    PetPutFree {
         Client {
             pid: u32,
             monster: i32,
-            flag: i32,
+            free: u8,
         }
         Server {
-
+            pid: u32,
+            free: u8,
+            time: i32,
         }
+    }
+    PetPutTraining {
+        Client {
+            pid: u32,
+        }
+        Server {}
     }
     PetGetStarLevel {
         Client {
@@ -392,6 +409,12 @@ cmd_object! {
         Server {
             items: Vec<PetDictionaryItemInfo>,
             pets: Vec<PetDictionaryPetInfo>,
+        }
+    }
+    PetTreatAll {
+        Client {}
+        Server {
+            coins: i32,
         }
     }
 }

@@ -1,4 +1,4 @@
-use demo::log_message;
+use demo::PrintMessage;
 use futures::{SinkExt, StreamExt};
 use message::entity::LoginGetServerListRsp;
 use message::message::{Body, Command, Message};
@@ -148,4 +148,8 @@ async fn may_record_proxy(msg: &mut Message) {
             }
         }
     }
+}
+
+fn log_message(client: bool, addr: &SocketAddr, msg: &Message) {
+    info!(?addr, "{}", msg.data_msg(client));
 }

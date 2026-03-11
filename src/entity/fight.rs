@@ -254,7 +254,9 @@ cmd_object! {
     }
     FightCmdEscape {
         Client {}
-        Server {}
+        Server {
+            _a: i32,
+        }
     }
     FightEndNotify {
         Server {

@@ -510,4 +510,16 @@ cmd_object! {
             reward: ItemReward,
         }
     }
+    DoorFightMatch {
+        Client {
+            // 14,15,16， 209,210,211
+            //无禽-演习 { gate_type: 19, gate: 214 }
+            //御风 { gate_type: 28, gate: 220 }
+            gate_type: i32,
+            gate: i32,
+        }
+        Server {
+            //todo data: Vec<>,
+        }
+    }
 }
